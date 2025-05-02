@@ -1,0 +1,96 @@
+version: '3.8'
+
+volumes:
+  postgres-data:
+  zabbix-server-data:
+  portainer-data:
+  grafana-data:
+
+services:
+  postgres-server:
+    image: postgres:latest
+    container_name: postgres-server
+    environment:
+      POSTGRES_USER: "zabbix"
+      POSTGRES_PASSWORD: "zabbix"
+      POSTGRES_DB: "zabbix"
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    network_mode: host  # Usar la red del host
+
+  zabbix-snmptraps:
+    image: zabbix/zabbix-snmptraps:alpine-7.0-latest
+    container_name: zabbix-snmptraps
+    volumes:
+      - /zbx_instance/snmptraps:/var/lib/zabbix/snmptraps:rw
+      - /var/lib/zabbix/mibs:/usr/share/snmp/mibs:ro
+    ports:
+      - "162:1162/udp"
+    restart: unless-stopped
+    network_mode: host  # Usar la red del host
+
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql:alpine-7.0-latest
+    container_name: zabbix-server-pgsql
+    environment:
+      DB_SERVER_HOST: "localhost"  # Cambiar a localhost
+      POSTGRES_USER: "zabbix"
+      POSTGRES_PASSWORD: "zabbix_pwd"
+      POSTGRES_DB: "zabbix"
+      ZBX_ENABLE_SNMP_TRAPS: "true"
+    ports:
+      - "10051:10051"  # Exponer el puerto 10051
+    volumes:
+      - zabbix-server-data:/var/lib/zabbix
+    depends_on:
+      - postgres-server
+      - zabbix-snmptraps
+    restart: unless-stopped
+    network_mode: host  # Usar la red del host
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-7.0-latest
+    container_name: zabbix-web-nginx-pgsql
+    environment:
+      ZBX_SERVER_HOST: "localhost"  # Cambiar a localhost
+      DB_SERVER_HOST: "localhost"  # Cambiar a localhost
+      POSTGRES_USER: "zabbix"
+      POSTGRES_PASSWORD: "zabbix_pwd"
+      POSTGRES_DB: "zabbix"
+    ports:
+      - "8085:8085"  # Exponer el puerto HTTP
+    depends_on:
+      - postgres-server
+      - zabbix-server
+    restart: unless-stopped
+    network_mode: host  # Usar la red del host
+    # Si no necesitas un volumen, simplemente quítalo o comentalo
+    # volumes:
+    #   - [] 
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    ports:
+      - "9000:9000"  # Puerto para acceder a Portainer
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # Para administrar Docker localmente
+      - portainer-data:/data  # Persistencia de los datos de Portainer
+    restart: unless-stopped
+    network_mode: host  # Usar la red del host
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    volumes:
+      - grafana-data:/var/lib/grafana  # Persistencia de los datos de Grafana
+    ports:
+      - "3000:3000"  # Puerto para acceder a Grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      - zabbix-server
+    network_mode: host  # Usar la red del host
