@@ -67,6 +67,15 @@ services:
     # volumes:
     #   - [] 
 
+  zabbix-agent:
+    image: zabbix/zabbix-agent:alpine-7.0-latest
+    container_name: zabbix-agent
+    environment:
+      ZBX_SERVER_HOST: "127.0.0.1"  # Dirección del servidor Zabbix
+      ZBX_HOSTNAME: "Zabbix server"  # Nombre que debe coincidir con el host configurado en Zabbix
+    restart: unless-stopped
+    network_mode: host  # Usar la red del host
+
   portainer:
     image: portainer/portainer-ce:latest
     container_name: portainer
