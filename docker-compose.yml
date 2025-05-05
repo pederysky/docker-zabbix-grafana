@@ -4,6 +4,10 @@ volumes:
   portainer-data:
   grafana-data:
 
+networks:
+  zabbix-net:
+    driver: bridge
+
 services:
   postgres-server:
     image: postgres:latest
@@ -15,7 +19,11 @@ services:
     restart: unless-stopped
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    network_mode: host  # Usar la red del host
+    ports:
+      - "5432:5432"  # Exponer puerto de PostgreSQL
+    networks:
+      - zabbix-net
+    # network_mode: host  # Usar la red del host (comentado)
 
   zabbix-snmptraps:
     image: zabbix/zabbix-snmptraps:alpine-7.0-latest
@@ -26,13 +34,15 @@ services:
     ports:
       - "162:1162/udp"
     restart: unless-stopped
-    network_mode: host  # Usar la red del host
+    networks:
+      - zabbix-net
+    # network_mode: host  # Usar la red del host (comentado)
 
   zabbix-server:
     image: zabbix/zabbix-server-pgsql:alpine-7.0-latest
     container_name: zabbix-server-pgsql
     environment:
-      DB_SERVER_HOST: "127.0.0.1"  # Dirección localhost porque estamos usando network_mode: host
+      DB_SERVER_HOST: "postgres-server"  # Cambiar a nombre del contenedor de PostgreSQL
       POSTGRES_USER: "zabbix"
       POSTGRES_PASSWORD: "zabbix"
       POSTGRES_DB: "zabbix"
@@ -45,24 +55,28 @@ services:
       - postgres-server
       - zabbix-snmptraps
     restart: unless-stopped
-    network_mode: host  # Usar la red del host
+    networks:
+      - zabbix-net
+    # network_mode: host  # Usar la red del host (comentado)
 
   zabbix-web:
     image: zabbix/zabbix-web-nginx-pgsql:alpine-7.0-latest
     container_name: zabbix-web-nginx-pgsql
     environment:
-      ZBX_SERVER_HOST: "127.0.0.1"  # Dirección del servidor Zabbix
-      DB_SERVER_HOST: "127.0.0.1"  # Dirección localhost porque estamos usando network_mode: host
+      ZBX_SERVER_HOST: "zabbix-server-pgsql"  # Usar nombre del contenedor
+      DB_SERVER_HOST: "postgres-server"  # Cambiar a nombre del contenedor de PostgreSQL
       POSTGRES_USER: "zabbix"
       POSTGRES_PASSWORD: "zabbix"
       POSTGRES_DB: "zabbix"
     ports:
-      - "8085:8085"  # Exponer el puerto HTTP
+      - "8085:8080"  # Exponer el puerto HTTP (ajustado a 8080 interno)
     depends_on:
       - postgres-server
       - zabbix-server
     restart: unless-stopped
-    network_mode: host  # Usar la red del host
+    networks:
+      - zabbix-net
+    # network_mode: host  # Usar la red del host (comentado)
     # Si no necesitas un volumen, simplemente quítalo o comentalo
     # volumes:
     #   - [] 
@@ -71,10 +85,12 @@ services:
     image: zabbix/zabbix-agent:alpine-7.0-latest
     container_name: zabbix-agent
     environment:
-      ZBX_SERVER_HOST: "127.0.0.1"  # Dirección del servidor Zabbix
+      ZBX_SERVER_HOST: "zabbix-server-pgsql"  # Dirección del servidor Zabbix (ajustado al nombre del contenedor)
       ZBX_HOSTNAME: "Zabbix server"  # Nombre que debe coincidir con el host configurado en Zabbix
     restart: unless-stopped
-    network_mode: host  # Usar la red del host
+    networks:
+      - zabbix-net
+    # network_mode: host  # Usar la red del host (comentado)
 
   portainer:
     image: portainer/portainer-ce:latest
@@ -85,7 +101,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock  # Para administrar Docker localmente
       - portainer-data:/data  # Persistencia de los datos de Portainer
     restart: unless-stopped
-    network_mode: host  # Usar la red del host
+    networks:
+      - zabbix-net
+    # network_mode: host  # Usar la red del host (comentado)
 
   grafana:
     image: grafana/grafana:latest
@@ -100,4 +118,6 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: admin
     depends_on:
       - zabbix-server
-    network_mode: host  # Usar la red del host
+    networks:
+      - zabbix-net
+    # network_mode: host  # Usar la red del host (comentado)
