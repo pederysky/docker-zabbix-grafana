@@ -14,21 +14,25 @@ Este repositorio contiene un archivo `docker-compose.yml` que despliega un stack
 
 ## Requisitos
 
-- Docker Engine 19.03.0+
-- Docker Compose 1.27.0+
+- Docker + 19.03.0
+- Docker Compose + 1.27.0
 
 ## Despliegue
 
 Para desplegar todos los servicios:
 
 ```bash
-docker-compose up -d
+docker compose up -d
+```
+Para comprobar todos los servicios:
+```bash
+docker compose ps
 ```
 
 Para detener todos los servicios:
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ## URLs y Credenciales de Acceso
