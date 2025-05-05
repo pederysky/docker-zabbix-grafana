@@ -32,7 +32,7 @@ services:
     image: zabbix/zabbix-server-pgsql:alpine-7.0-latest
     container_name: zabbix-server-pgsql
     environment:
-      DB_SERVER_HOST: "127.0.0.1"  # Cambiar a 127.0.0.1
+      DB_SERVER_HOST: "127.0.0.1" 
       POSTGRES_USER: "zabbix"
       POSTGRES_PASSWORD: "zabbix"
       POSTGRES_DB: "zabbix"
@@ -51,8 +51,8 @@ services:
     image: zabbix/zabbix-web-nginx-pgsql:alpine-7.0-latest
     container_name: zabbix-web-nginx-pgsql
     environment:
-      ZBX_SERVER_HOST: "127.0.0.1"  # Cambiar a 127.0.0.1
-      DB_SERVER_HOST: "127.0.0.1"  # Cambiar a 127.0.0.1
+      ZBX_SERVER_HOST: "127.0.0.1" 
+      DB_SERVER_HOST: "127.0.0.1" 
       POSTGRES_USER: "zabbix"
       POSTGRES_PASSWORD: "zabbix"
       POSTGRES_DB: "zabbix"
