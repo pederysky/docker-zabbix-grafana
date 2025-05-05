@@ -36,7 +36,7 @@ services:
     environment:
       DB_SERVER_HOST: "localhost"  # Cambiar a localhost
       POSTGRES_USER: "zabbix"
-      POSTGRES_PASSWORD: "zabbix_pwd"
+      POSTGRES_PASSWORD: "zabbix"
       POSTGRES_DB: "zabbix"
       ZBX_ENABLE_SNMP_TRAPS: "true"
     ports:
@@ -56,7 +56,7 @@ services:
       ZBX_SERVER_HOST: "localhost"  # Cambiar a localhost
       DB_SERVER_HOST: "localhost"  # Cambiar a localhost
       POSTGRES_USER: "zabbix"
-      POSTGRES_PASSWORD: "zabbix_pwd"
+      POSTGRES_PASSWORD: "zabbix"
       POSTGRES_DB: "zabbix"
     ports:
       - "8085:8085"  # Exponer el puerto HTTP
